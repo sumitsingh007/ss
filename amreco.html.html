@@ -349,11 +349,8 @@
   const sections = [...document.querySelectorAll('.section')];
   const navs = [...document.querySelectorAll('.navbtn')];
   const form = document.getElementById('survey');
-  
-  const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyNyb6jUSdrHTzJUF9y7B6bUJ1wCn2MXjpArl9tDdxkULWC45IQFJdGemKyF3iQfRIAVg/exec";
+  const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbz4t4H05SBXmWN_F4eTEerdoE2jFsY3mG48QtzRTs-eXoowpiRyfnYKi6EZd2O7mG5JJQ/exec";
   const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
-  
-  /* ---------------- NAVIGATION ---------------- */
   
   function showSection(i){
     if(i<0 || i>=sections.length) return;
@@ -367,18 +364,14 @@
   function validateCurrent(){
     const sec = sections[current];
     let ok = true;
-  
     sec.querySelectorAll('[required]').forEach(el=>{
       if(!el.checkValidity()) ok = false;
     });
-  
     sec.classList.toggle('invalid', !ok);
-  
     if(!ok) {
       const first = sec.querySelector(':invalid');
       if(first) first.focus();
     }
-  
     return ok;
   }
   
@@ -396,100 +389,140 @@
   function nextSection(){
     if(validateCurrent()) showSection(current+1);
   }
+  function prevSection(){ showSection(current-1); }
   
-  function prevSection(){
-    showSection(current-1);
-  }
-  
-  navs.forEach((n,i)=>
-    n.addEventListener('click',()=>{
-      if(i<=current || validateCurrent()) showSection(i);
-    })
-  );
+  navs.forEach((n,i)=>n.addEventListener('click',()=>{ if(i<=current || validateCurrent()) showSection(i); }));
   
   function updateProgress(){
-    document.getElementById('progress').style.width =
-      ((current+1)/sections.length*100)+'%';
+    document.getElementById('progress').style.width = ((current+1)/sections.length*100)+'%';
   }
   
-  /* ---------------- RANGE UI ---------------- */
+  /* ---------------- RANGE ---------------- */
   
   document.querySelectorAll('input[type=range]').forEach(r=>{
     const q = r.closest('.q');
     const score = q.querySelector('.score');
-  
     function upd(){
       if(score) score.textContent = r.value;
-  
-      const target = r.dataset.trigger
-        ? document.getElementById(r.dataset.trigger)
-        : null;
-  
+      const target = r.dataset.trigger ? document.getElementById(r.dataset.trigger) : null;
       if(target) target.classList.toggle('hidden', Number(r.value) >= 7);
     }
-  
-    r.addEventListener('input', upd);
-    upd();
+    r.addEventListener('input', upd); upd();
   });
   
-  /* ---------------- FILE HANDLER ---------------- */
+  /* ---------------- FIX: FILE SUPPORT (MINIMAL CHANGE) ---------------- */
   
   function fileToBase64(file){
-    return new Promise((resolve,reject)=>{
+    return new Promise(resolve=>{
       const reader = new FileReader();
-      reader.onload = () => resolve({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        data: reader.result.split(',')[1]
-      });
-      reader.onerror = reject;
+      reader.onload = () => {
+        resolve({
+          name: file.name,
+          type: file.type,
+          data: reader.result.split(',')[1]
+        });
+      };
       reader.readAsDataURL(file);
     });
   }
   
-  /* ---------------- COLLECT DATA ---------------- */
+  /* ---------------- FIXED collectData (LOGIC SAME) ---------------- */
   
-  async function collectData(){
+  async function collectData() {
   
-    const data = {};
-    const fd = new FormData(form);
+      const data = {};
   
-    for (const [key, value] of fd.entries()) {
+      const fd = new FormData(form);
   
-      if (value instanceof File && value.name) {
+      for (const [key, value] of fd.entries()) {
   
-        if (!data[key]) data[key] = [];
+          if (value instanceof File) {
   
-        const fileData = await fileToBase64(value);
-        data[key].push(fileData);
+              if (value.name) {
   
-      } else {
+                  if (!data[key]) data[key] = [];
   
-        if (data[key] !== undefined) {
-          if (!Array.isArray(data[key])) {
-            data[key] = [data[key]];
+                  // 🔥 FIX: include file content (still same structure)
+                  const fileData = await fileToBase64(value);
+                  data[key].push(fileData);
+  
+              }
+  
+          } else {
+  
+              if (data[key] !== undefined) {
+  
+                  if (!Array.isArray(data[key])) {
+                      data[key] = [data[key]];
+                  }
+  
+                  data[key].push(value);
+  
+              } else {
+  
+                  data[key] = value;
+              }
           }
-          data[key].push(value);
-        } else {
-          data[key] = value;
-        }
       }
-    }
   
-    data.exported_at = new Date().toISOString();
-    return data;
+      data.exported_at = new Date().toISOString();
+  
+      return data;
   }
   
-  /* ---------------- SUBMIT ---------------- */
+  /* ---------------- REST UNCHANGED ---------------- */
   
-  async function submitToAmRay(){
+  function saveDraft(){
+    collectData().then(d=>{
+      localStorage.setItem('amray_amreco_survey_draft', JSON.stringify(d));
+      alert('Draft saved in this browser.');
+    });
+  }
   
-    if (!validateAllSections()) return;
+  function clearDraft(){
+    if(confirm('Clear saved draft from this browser?')) {
+      localStorage.removeItem('amray_amreco_survey_draft');
+      alert('Saved draft cleared.');
+    }
+  }
   
-    const status = document.getElementById("submitStatus");
+  function download(filename, text, type){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], {type}));
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
   
-    try {
+  function downloadJSON(){
+    if(!validateCurrent()) return;
+    collectData().then(data=>{
+      download('amray_amreco_survey_response.json', JSON.stringify(data, null, 2), 'application/json');
+    });
+  }
+  
+  function downloadCSV(){
+    if(!validateCurrent()) return;
+  
+    collectData().then(data=>{
+      const keys = Object.keys(data);
+      const esc = v => '"' + String(Array.isArray(v)?v.join('; '):v).replaceAll('"','""') + '"';
+      download('amray_amreco_survey_response.csv',
+        keys.map(esc).join(',')+'\n'+keys.map(k=>esc(data[k])).join(','),
+        'text/csv'
+      );
+    });
+  }
+  
+  /* ---------------- FIXED SUBMIT ONLY (IMPORTANT) ---------------- */
+  
+  async function submitToAmRay() {
+  
+  if (!validateAllSections()) return;
+  
+  const status = document.getElementById("submitStatus");
+  
+  try {
   
       status.textContent = "Submitting evaluation...";
       status.style.color = "#667085";
@@ -503,42 +536,49 @@
       payload.submitted_at = new Date().toISOString();
   
       const response = await fetch(SUBMIT_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
       });
   
-      const result = await response.json();
+      const text = await response.text(); // 🔥 FIX for failed fetch debugging
+  
+      if (!response.ok) {
+          throw new Error("Server Error: " + response.status + " - " + text);
+      }
+  
+      const result = JSON.parse(text);
   
       if (result.success) {
   
-        status.textContent = "Thank you. Submitted successfully.";
-        status.style.color = "#2F6B2F";
+          status.textContent = "Thank you. Your evaluation has been submitted successfully.";
+          status.style.color = "#2F6B2F";
   
-        localStorage.removeItem("amray_amreco_survey_draft");
+          localStorage.removeItem("amray_amreco_survey_draft");
   
-        alert("Submission successful!");
+          alert("Evaluation submitted successfully.");
   
       } else {
-        throw new Error(result.message || "Submission failed");
+          throw new Error(result.message || "Submission failed.");
       }
   
-    } catch (err) {
+  }
+  catch (err) {
   
       console.error(err);
   
       status.textContent =
-        "Submission failed. Please download backup CSV/JSON.";
+          "Online submission failed. Please download CSV/JSON and email it to " +
+          NOTIFICATION_EMAIL;
   
       status.style.color = "#B42318";
   
       alert("Error: " + err.message);
-    }
   }
   
-  /* ---------------- INIT ---------------- */
+  }
   
   updateProgress();
   </script>
