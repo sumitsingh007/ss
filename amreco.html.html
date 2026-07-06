@@ -345,245 +345,302 @@
 </div>
 
 <script>
- console.log(JSON.stringify(payload)); 
   let current = 0;
-  const sections = [...document.querySelectorAll('.section')];
-  const navs = [...document.querySelectorAll('.navbtn')];
-  const form = document.getElementById('survey');
+  const sections = [...document.querySelectorAll(".section")];
+  const navs = [...document.querySelectorAll(".navbtn")];
+  const form = document.getElementById("survey");
   
-  const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyNyb6jUSdrHTzJUF9y7B6bUJ1wCn2MXjpArl9tDdxkULWC45IQFJdGemKyF3iQfRIAVg/exec";
+  const SUBMIT_ENDPOINT =
+    "https://script.google.com/macros/s/AKfycbyNyb6jUSdrHTzJUF9y7B6bUJ1wCn2MXjpArl9tDdxkULWC45IQFJdGemKyF3iQfRIAVg/exec";
+  
   const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
   
   
   function showSection(i){
-    if(i<0 || i>=sections.length) return;
+      if(i<0 || i>=sections.length) return;
   
-    current = i;
+      current=i;
   
-    sections.forEach((s,idx)=>s.classList.toggle('active', idx===i));
-    navs.forEach((n,idx)=>n.classList.toggle('active', idx===i));
+      sections.forEach((s,index)=>s.classList.toggle("active",index===i));
+      navs.forEach((n,index)=>n.classList.toggle("active",index===i));
   
-    updateProgress();
+      updateProgress();
   
-    window.scrollTo({ top:0, behavior:'smooth' });
+      window.scrollTo({
+          top:0,
+          behavior:"smooth"
+      });
   }
   
   
   function validateCurrent(){
-    const sec = sections[current];
-    let ok = true;
   
-    sec.querySelectorAll('[required]').forEach(el=>{
-      if(!el.checkValidity()) ok = false;
-    });
+      const sec=sections[current];
+      let ok=true;
   
-    sec.classList.toggle('invalid', !ok);
+      sec.querySelectorAll("[required]").forEach(el=>{
+          if(!el.checkValidity()) ok=false;
+      });
   
-    if(!ok){
-      const first = sec.querySelector(':invalid');
-      if(first) first.focus();
-    }
+      sec.classList.toggle("invalid",!ok);
   
-    return ok;
+      if(!ok){
+          const first=sec.querySelector(":invalid");
+          if(first) first.focus();
+      }
+  
+      return ok;
   }
   
   
   function validateAllSections(){
-    for(let i=0;i<sections.length;i++){
-      current = i;
-      if(!validateCurrent()){
-        showSection(i);
-        return false;
+  
+      for(let i=0;i<sections.length;i++){
+  
+          current=i;
+  
+          if(!validateCurrent()){
+              showSection(i);
+              return false;
+          }
       }
-    }
-    return true;
+  
+      return true;
   }
   
   
   function nextSection(){
-    if(validateCurrent()) showSection(current+1);
+      if(validateCurrent()) showSection(current+1);
   }
   
   function prevSection(){
-    showSection(current-1);
+      showSection(current-1);
   }
   
   
   navs.forEach((n,i)=>{
-    n.addEventListener('click',()=>{
-      if(i<=current || validateCurrent()){
-        showSection(i);
-      }
-    });
+      n.addEventListener("click",()=>{
+          if(i<=current || validateCurrent()){
+              showSection(i);
+          }
+      });
   });
   
   
   function updateProgress(){
-    document.getElementById('progress').style.width =
-    ((current+1)/sections.length*100)+'%';
+      document.getElementById("progress").style.width=
+          ((current+1)/sections.length*100)+"%";
   }
   
   
-  // keep range UI
-  document.querySelectorAll('input[type=range]').forEach(r=>{
-    const q = r.closest('.q');
-    const score = q.querySelector('.score');
+  // Range UI
   
-    function upd(){
-      if(score) score.textContent = r.value;
-    }
+  document.querySelectorAll("input[type=range]").forEach(r=>{
   
-    r.addEventListener('input', upd);
-    upd();
+      const score=r.closest(".q").querySelector(".score");
+  
+      function update(){
+          if(score) score.textContent=r.value;
+      }
+  
+      r.addEventListener("input",update);
+      update();
+  
   });
   
   
+  // Convert file
   
-  // ✅ FILE TO BASE64 CONVERTER
   function fileToBase64(file){
-    return new Promise((resolve,reject)=>{
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  
+      return new Promise((resolve,reject)=>{
+  
+          const reader=new FileReader();
+  
+          reader.onload=()=>{
+              resolve(reader.result.split(",")[1]);
+          };
+  
+          reader.onerror=reject;
+  
+          reader.readAsDataURL(file);
+  
+      });
+  
   }
   
   
+  // Collect data
   
-  // ✅ COLLECT DATA (WITH FILE SUPPORT)
   async function collectData(){
   
-    const data = {};
-    const fd = new FormData(form);
+      const data={};
   
-    for (const [k,v] of fd.entries()) {
+      const fd=new FormData(form);
   
-      if(v instanceof File && v.name){
+      for(const [key,value] of fd.entries()){
   
-        if(!data[k]) data[k]=[];
+          if(value instanceof File && value.name){
   
-        const base64 = await fileToBase64(v);
+              if(!data[key]) data[key]=[];
   
-        data[k].push({
-          name: v.name,
-          type: v.type,
-          data: base64
-        });
+              data[key].push({
+                  name:value.name,
+                  type:value.type,
+                  data:await fileToBase64(value)
+              });
+  
+          }
+          else{
+  
+              if(data[key]!==undefined){
+  
+                  if(!Array.isArray(data[key]))
+                      data[key]=[data[key]];
+  
+                  data[key].push(value);
+  
+              }else{
+  
+                  data[key]=value;
+  
+              }
+  
+          }
   
       }
-      else if(data[k]){
   
-        if(!Array.isArray(data[k])) data[k]=[data[k]];
+      data.exported_at=new Date().toISOString();
   
-        data[k].push(v);
+      return data;
   
-      }
-      else{
-        data[k]=v;
-      }
-    }
-  
-    data.exported_at = new Date().toISOString();
-    return data;
   }
   
   
   
-  // download helpers
+  // Download helpers
+  
   function download(filename,text,type){
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([text],{type}));
-    a.download=filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  
+      const a=document.createElement("a");
+  
+      a.href=URL.createObjectURL(new Blob([text],{type}));
+  
+      a.download=filename;
+  
+      a.click();
+  
+      URL.revokeObjectURL(a.href);
+  
   }
   
   
   async function downloadJSON(){
-    if(!validateCurrent()) return;
-    const data = await collectData();
-    download('survey.json', JSON.stringify(data,null,2), 'application/json');
+  
+      if(!validateCurrent()) return;
+  
+      const data=await collectData();
+  
+      download(
+          "survey.json",
+          JSON.stringify(data,null,2),
+          "application/json"
+      );
+  
   }
   
   
   async function downloadCSV(){
-    if(!validateCurrent()) return;
   
-    const data = await collectData();
-    const keys = Object.keys(data);
+      if(!validateCurrent()) return;
   
-    const esc = v =>
-      '"' + String(Array.isArray(v)?v.join('; '):v).replaceAll('"','""') + '"';
+      const data=await collectData();
   
-    download(
-      'survey.csv',
-      keys.map(esc).join(',') + '\n' + keys.map(k=>esc(data[k])).join(','),
-      'text/csv'
-    );
+      const keys=Object.keys(data);
+  
+      const esc=v=>'"'+String(
+          Array.isArray(v)?JSON.stringify(v):v
+      ).replaceAll('"','""')+'"';
+  
+      download(
+          "survey.csv",
+          keys.map(esc).join(",")+"\n"+
+          keys.map(k=>esc(data[k])).join(","),
+          "text/csv"
+      );
+  
   }
   
   
   
-  // ✅ MAIN SUBMIT (FIXED)
+  // Submit
+  
   async function submitToAmRay(){
   
-    if(!validateAllSections()) return;
+      if(!validateAllSections()) return;
   
-    const status = document.getElementById("submitStatus");
+      const status=document.getElementById("submitStatus");
   
-    try{
+      try{
   
-      status.textContent = "Submitting...";
-      status.style.color = "#667085";
+          status.style.color="#666";
+          status.textContent="Submitting...";
   
-      const payload = await collectData();
+          const payload=await collectData();
   
-      payload.notification_email = NOTIFICATION_EMAIL;
-      payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
-      payload.user_agent = navigator.userAgent;
-      payload.page_url = window.location.href;
-      payload.submitted_at = new Date().toISOString();
+          payload.notification_email=NOTIFICATION_EMAIL;
+          payload.survey_name="AMRECO PURESIL Sustainable Fabric Evaluation";
+          payload.page_url=location.href;
+          payload.user_agent=navigator.userAgent;
+          payload.submitted_at=new Date().toISOString();
   
-      const response = await fetch(SUBMIT_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+          const response=await fetch(SUBMIT_ENDPOINT,{
+              method:"POST",
+              headers:{
+                  "Content-Type":"application/json"
+              },
+              body:JSON.stringify(payload)
+          });
   
-      const result = await response.json();
+          const text=await response.text();
   
-      if(result.success){
+          let result;
   
-        status.textContent = "Submitted successfully!";
-        status.style.color = "green";
+          try{
+              result=JSON.parse(text);
+          }
+          catch{
+              throw new Error(text);
+          }
   
-        localStorage.removeItem("amray_amreco_survey_draft");
+          if(!result.success){
+              throw new Error(result.message || "Submission failed");
+          }
   
-        alert("Submission successful!");
+          status.style.color="green";
+          status.textContent="Submitted successfully!";
   
-      } else {
-        throw new Error(result.message || "Submission failed");
+          localStorage.removeItem("amray_amreco_survey_draft");
+  
+          alert("Survey submitted successfully.");
+  
+      }
+      catch(err){
+  
+          console.error(err);
+  
+          status.style.color="red";
+          status.textContent="Submission failed.";
+  
+          alert(err.message);
+  
       }
   
-    } catch(err){
-  
-      console.error(err);
-  
-      status.textContent =
-        "Submission failed. Please download backup.";
-  
-      status.style.color = "red";
-  
-      alert(err.message);
-  
-    }
   }
   
   
   updateProgress();
+  
   </script>
 
 
