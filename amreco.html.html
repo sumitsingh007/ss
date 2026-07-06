@@ -424,54 +424,14 @@ let current = 0;
 const sections = [...document.querySelectorAll('.section')];
 const navs = [...document.querySelectorAll('.navbtn')];
 const form = document.getElementById('survey');
-
+const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbz4t4H05SBXmWN_F4eTEerdoE2jFsY3mG48QtzRTs-eXoowpiRyfnYKi6EZd2O7mG5JJQ/exec";
+const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
 function showSection(i){
   if(i<0 || i>=sections.length) return;
   current = i;
   sections.forEach((s,idx)=>s.classList.toggle('active', idx===i));
   navs.forEach((n,idx)=>n.classList.toggle('active', idx===i));
-  
-const POWER_AUTOMATE_ENDPOINT = "https://script.google.com/macros/s/AKfycbwreUxG2EfxHqmC4uThKoqwbDLQPJeF9MDHPias97FQPFTfl-Y2ovPx73w25ZjFz7oI2w/exec";
-const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
-
-async function submitToAmRay(){
-  if(!validateCurrent()) return;
-  const status = document.getElementById('submitStatus');
-  const payload = collectData();
-  payload.notification_email = NOTIFICATION_EMAIL;
-  payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
-  payload.user_agent = navigator.userAgent;
-  payload.page_url = window.location.href;
-
-  if(POWER_AUTOMATE_ENDPOINT.includes("PASTE_POWER_AUTOMATE")){
-    status.textContent = "Setup required: replace the placeholder Power Automate URL in this HTML file before sending to users.";
-    status.style.color = "#B42318";
-    downloadJSON();
-    return;
-  }
-
-  try {
-    status.textContent = "Submitting evaluation...";
-    status.style.color = "#667085";
-    const response = await fetch(POWER_AUTOMATE_ENDPOINT, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(payload)
-    });
-    if(!response.ok){ throw new Error("Submission failed with status " + response.status); }
-    status.textContent = "Thank you. Your evaluation has been submitted to AmRay.";
-    status.style.color = "#2F6B2F";
-    localStorage.removeItem('amray_amreco_survey_draft');
-    alert("Evaluation submitted successfully. Thank you for your feedback.");
-  } catch(err) {
-    console.error(err);
-    status.textContent = "Online submission failed. Please download the CSV or JSON backup and email it to amraydigital@gmail.com.";
-    status.style.color = "#B42318";
-    alert("Online submission failed. Please use the CSV/JSON backup buttons and email the file to amraydigital@gmail.com.");
-  }
-}
-
-updateProgress();
+  updateProgress();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 function validateCurrent(){
@@ -487,12 +447,21 @@ function validateCurrent(){
   }
   return ok;
 }
+function validateAllSections(){
+  for(let i = 0; i < sections.length; i++){
+    current = i;
+    if(!validateCurrent()) {
+      showSection(i);
+      return false;
+    }
+  }
+  return true;
+}
 function nextSection(){
   if(validateCurrent()) showSection(current+1);
 }
 function prevSection(){ showSection(current-1); }
 navs.forEach((n,i)=>n.addEventListener('click',()=>{ if(i<=current || validateCurrent()) showSection(i); }));
-
 function updateProgress(){
   document.getElementById('progress').style.width = ((current+1)/sections.length*100)+'%';
 }
@@ -506,7 +475,6 @@ document.querySelectorAll('input[type=range]').forEach(r=>{
   }
   r.addEventListener('input', upd); upd();
 });
-
 function collectData(){
   const data = {};
   const fd = new FormData(form);
@@ -552,47 +520,34 @@ function downloadCSV(){
   const esc = v => '"' + String(Array.isArray(v)?v.join('; '):v).replaceAll('"','""') + '"';
   download('amray_amreco_survey_response.csv', keys.map(esc).join(',')+'\n'+keys.map(k=>esc(data[k])).join(','), 'text/csv');
 }
-
-const POWER_AUTOMATE_ENDPOINT = "https://script.google.com/macros/s/AKfycbwreUxG2EfxHqmC4uThKoqwbDLQPJeF9MDHPias97FQPFTfl-Y2ovPx73w25ZjFz7oI2w/exec";
-const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
-
 async function submitToAmRay(){
-  if(!validateCurrent()) return;
+  if(!validateAllSections()) return;
   const status = document.getElementById('submitStatus');
   const payload = collectData();
   payload.notification_email = NOTIFICATION_EMAIL;
   payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
   payload.user_agent = navigator.userAgent;
   payload.page_url = window.location.href;
-
-  if(POWER_AUTOMATE_ENDPOINT.includes("PASTE_POWER_AUTOMATE")){
-    status.textContent = "Setup required: replace the placeholder Power Automate URL in this HTML file before sending to users.";
-    status.style.color = "#B42318";
-    downloadJSON();
-    return;
-  }
-
   try {
     status.textContent = "Submitting evaluation...";
     status.style.color = "#667085";
-    const response = await fetch(POWER_AUTOMATE_ENDPOINT, {
+    const response = await fetch(SUBMIT_ENDPOINT, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
       body: JSON.stringify(payload)
     });
-    if(!response.ok){ throw new Error("Submission failed with status " + response.status); }
     status.textContent = "Thank you. Your evaluation has been submitted to AmRay.";
     status.style.color = "#2F6B2F";
     localStorage.removeItem('amray_amreco_survey_draft');
     alert("Evaluation submitted successfully. Thank you for your feedback.");
   } catch(err) {
     console.error(err);
-    status.textContent = "Online submission failed. Please download the CSV or JSON backup and email it to amraydigital@gmail.com.";
+    status.textContent = "Online submission failed. Please download the CSV or JSON backup and email it to " + NOTIFICATION_EMAIL;
     status.style.color = "#B42318";
-    alert("Online submission failed. Please use the CSV/JSON backup buttons and email the file to amraydigital@gmail.com.");
+    alert("Online submission failed. Please use the CSV/JSON backup buttons and email the file to " + NOTIFICATION_EMAIL);
   }
 }
-
 updateProgress();
 </script>
 
