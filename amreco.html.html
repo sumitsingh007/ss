@@ -345,180 +345,509 @@
 </div>
 
 <script>
-let current = 0;
-const sections = [...document.querySelectorAll('.section')];
-const navs = [...document.querySelectorAll('.navbtn')];
-const form = document.getElementById('survey');
-const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbz4t4H05SBXmWN_F4eTEerdoE2jFsY3mG48QtzRTs-eXoowpiRyfnYKi6EZd2O7mG5JJQ/exec";
-const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
-function showSection(i){
-  if(i<0 || i>=sections.length) return;
-  current = i;
-  sections.forEach((s,idx)=>s.classList.toggle('active', idx===i));
-  navs.forEach((n,idx)=>n.classList.toggle('active', idx===i));
-  updateProgress();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-function validateCurrent(){
-  const sec = sections[current];
-  let ok = true;
-  sec.querySelectorAll('[required]').forEach(el=>{
-    if(!el.checkValidity()) ok = false;
-  });
-  sec.classList.toggle('invalid', !ok);
-  if(!ok) {
-    const first = sec.querySelector(':invalid');
-    if(first) first.focus();
-  }
-  return ok;
-}
-function validateAllSections(){
-  for(let i = 0; i < sections.length; i++){
+  let current = 0;
+  const sections = [...document.querySelectorAll('.section')];
+  const navs = [...document.querySelectorAll('.navbtn')];
+  const form = document.getElementById('survey');
+  
+  const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbz4t4H05SBXmWN_F4eTEerdoE2jFsY3mG48QtzRTs-eXoowpiRyfnYKi6EZd2O7mG5JJQ/exec";
+  const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
+  
+  
+  function showSection(i){
+    if(i<0 || i>=sections.length) return;
+  
     current = i;
-    if(!validateCurrent()) {
-      showSection(i);
-      return false;
-    }
-  }
-  return true;
-}
-function nextSection(){
-  if(validateCurrent()) showSection(current+1);
-}
-function prevSection(){ showSection(current-1); }
-navs.forEach((n,i)=>n.addEventListener('click',()=>{ if(i<=current || validateCurrent()) showSection(i); }));
-function updateProgress(){
-  document.getElementById('progress').style.width = ((current+1)/sections.length*100)+'%';
-}
-document.querySelectorAll('input[type=range]').forEach(r=>{
-  const q = r.closest('.q');
-  const score = q.querySelector('.score');
-  function upd(){
-    if(score) score.textContent = r.value;
-    const target = r.dataset.trigger ? document.getElementById(r.dataset.trigger) : null;
-    if(target) target.classList.toggle('hidden', Number(r.value) >= 7);
-  }
-  r.addEventListener('input', upd); upd();
-});
-function collectData(){
-  const data = {};
-  const fd = new FormData(form);
-  for (const [k,v] of fd.entries()) {
-    if(v instanceof File) {
-      if(!data[k]) data[k]=[];
-      if(v.name) data[k].push(v.name);
-    } else if(data[k]) {
-      if(!Array.isArray(data[k])) data[k] = [data[k]];
-      data[k].push(v);
-    } else {
-      data[k]=v;
-    }
-  }
-  data.exported_at = new Date().toISOString();
-  return data;
-}
-function saveDraft(){
-  localStorage.setItem('amray_amreco_survey_draft', JSON.stringify(collectData()));
-  alert('Draft saved in this browser.');
-}
-function clearDraft(){
-  if(confirm('Clear saved draft from this browser?')) {
-    localStorage.removeItem('amray_amreco_survey_draft');
-    alert('Saved draft cleared.');
-  }
-}
-function download(filename, text, type){
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], {type}));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-function downloadJSON(){
-  if(!validateCurrent()) return;
-  download('amray_amreco_survey_response.json', JSON.stringify(collectData(), null, 2), 'application/json');
-}
-function downloadCSV(){
-  if(!validateCurrent()) return;
-  const data = collectData();
-  const keys = Object.keys(data);
-  const esc = v => '"' + String(Array.isArray(v)?v.join('; '):v).replaceAll('"','""') + '"';
-  download('amray_amreco_survey_response.csv', keys.map(esc).join(',')+'\n'+keys.map(k=>esc(data[k])).join(','), 'text/csv');
-}
-async function submitToAmRay() {
-
-if (!validateAllSections()) return;
-
-const status = document.getElementById("submitStatus");
-
-const payload = collectData();
-
-payload.notification_email = NOTIFICATION_EMAIL;
-payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
-payload.user_agent = navigator.userAgent;
-payload.page_url = window.location.href;
-payload.submitted_at = new Date().toISOString();
-
-try {
-
-    status.textContent = "Submitting evaluation...";
-    status.style.color = "#667085";
-
-    const response = await fetch(SUBMIT_ENDPOINT, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+  
+    sections.forEach((s,idx)=>s.classList.toggle('active', idx===i));
+    navs.forEach((n,idx)=>n.classList.toggle('active', idx===i));
+  
+    updateProgress();
+  
+    window.scrollTo({
+      top:0,
+      behavior:'smooth'
     });
-
-    if (!response.ok) {
-        throw new Error("Server Error: " + response.status);
+  }
+  
+  
+  function validateCurrent(){
+  
+    const sec = sections[current];
+  
+    let ok = true;
+  
+    sec.querySelectorAll('[required]').forEach(el=>{
+  
+      if(!el.checkValidity()) {
+        ok = false;
+      }
+  
+    });
+  
+  
+    sec.classList.toggle('invalid', !ok);
+  
+  
+    if(!ok){
+  
+      const first = sec.querySelector(':invalid');
+  
+      if(first) first.focus();
+  
     }
-
-    const result = await response.json();
-
-    if (result.success) {
-
-        status.textContent = "Thank you. Your evaluation has been submitted successfully.";
-        status.style.color = "#2F6B2F";
-
-        localStorage.removeItem("amray_amreco_survey_draft");
-
-        alert("Evaluation submitted successfully. Thank you for your feedback.");
-
-        // Optional
-        // form.reset();
-        // showSection(0);
-
-    } else {
-
-        throw new Error(result.message || "Submission failed.");
-
+  
+    return ok;
+  
+  }
+  
+  
+  
+  function validateAllSections(){
+  
+    for(let i = 0; i < sections.length; i++){
+  
+      current = i;
+  
+      if(!validateCurrent()){
+  
+        showSection(i);
+  
+        return false;
+  
+      }
+  
     }
-
-}
-catch (err) {
-
-    console.error(err);
-
-    status.textContent =
-        "Online submission failed. Please download the CSV or JSON backup and email it to " +
-        NOTIFICATION_EMAIL;
-
-    status.style.color = "#B42318";
-
-    alert(
-        "Online submission failed.\n\n" +
-        err.message +
-        "\n\nPlease use the CSV/JSON backup."
+  
+    return true;
+  
+  }
+  
+  
+  
+  function nextSection(){
+  
+    if(validateCurrent()) {
+  
+      showSection(current+1);
+  
+    }
+  
+  }
+  
+  
+  
+  function prevSection(){
+  
+    showSection(current-1);
+  
+  }
+  
+  
+  
+  navs.forEach((n,i)=>{
+  
+    n.addEventListener('click',()=>{
+  
+      if(i<=current || validateCurrent()) {
+  
+        showSection(i);
+  
+      }
+  
+    });
+  
+  });
+  
+  
+  
+  function updateProgress(){
+  
+    document.getElementById('progress').style.width =
+    ((current+1)/sections.length*100)+'%';
+  
+  }
+  
+  
+  
+  document.querySelectorAll('input[type=range]').forEach(r=>{
+  
+    const q = r.closest('.q');
+  
+    const score = q.querySelector('.score');
+  
+  
+    function upd(){
+  
+      if(score) score.textContent = r.value;
+  
+  
+      const target = r.dataset.trigger ?
+      document.getElementById(r.dataset.trigger) : null;
+  
+  
+      if(target){
+  
+        target.classList.toggle(
+          'hidden',
+          Number(r.value) >= 7
+        );
+  
+      }
+  
+    }
+  
+  
+    r.addEventListener('input', upd);
+  
+    upd();
+  
+  });
+  
+  
+  
+  
+  
+  // UPDATED: Now keeps file objects
+  function collectData(){
+  
+    const data = {};
+  
+    const fd = new FormData(form);
+  
+  
+    for (const [k,v] of fd.entries()) {
+  
+  
+      if(v instanceof File){
+  
+        if(!v.name) continue;
+  
+  
+        if(!data[k]) {
+  
+          data[k]=[];
+  
+        }
+  
+  
+        data[k].push(v.name);
+  
+  
+      } 
+  
+      else if(data[k]) {
+  
+  
+        if(!Array.isArray(data[k])) {
+  
+          data[k]=[data[k]];
+  
+        }
+  
+  
+        data[k].push(v);
+  
+  
+      } 
+  
+      else {
+  
+  
+        data[k]=v;
+  
+  
+      }
+  
+  
+    }
+  
+  
+    data.exported_at = new Date().toISOString();
+  
+  
+    return data;
+  
+  }
+  
+  
+  
+  
+  
+  function saveDraft(){
+  
+    localStorage.setItem(
+      'amray_amreco_survey_draft',
+      JSON.stringify(collectData())
     );
-
-}
-
-}
-updateProgress();
-</script>
+  
+  
+    alert('Draft saved in this browser.');
+  
+  }
+  
+  
+  
+  
+  
+  function clearDraft(){
+  
+    if(confirm('Clear saved draft from this browser?')) {
+  
+      localStorage.removeItem(
+        'amray_amreco_survey_draft'
+      );
+  
+  
+      alert('Saved draft cleared.');
+  
+    }
+  
+  }
+  
+  
+  
+  
+  
+  function download(filename,text,type){
+  
+    const a=document.createElement('a');
+  
+    a.href=URL.createObjectURL(
+      new Blob([text],{type})
+    );
+  
+    a.download=filename;
+  
+    a.click();
+  
+    URL.revokeObjectURL(a.href);
+  
+  }
+  
+  
+  
+  
+  
+  function downloadJSON(){
+  
+    if(!validateCurrent()) return;
+  
+  
+    download(
+      'amray_amreco_survey_response.json',
+      JSON.stringify(collectData(),null,2),
+      'application/json'
+    );
+  
+  }
+  
+  
+  
+  
+  
+  function downloadCSV(){
+  
+    if(!validateCurrent()) return;
+  
+  
+    const data=collectData();
+  
+    const keys=Object.keys(data);
+  
+  
+    const esc=v =>
+    '"' +
+    String(
+      Array.isArray(v)
+      ? v.join('; ')
+      : v
+    )
+    .replaceAll('"','""')
+    + '"';
+  
+  
+    download(
+      'amray_amreco_survey_response.csv',
+      keys.map(esc).join(',')+
+      '\n'+
+      keys.map(k=>esc(data[k])).join(','),
+      'text/csv'
+    );
+  
+  }
+  
+  
+  
+  
+  
+  
+  
+  // UPDATED SUBMIT FUNCTION WITH FILE UPLOAD SUPPORT
+  
+  async function submitToAmRay(){
+  
+  
+    if(!validateAllSections()) return;
+  
+  
+  
+    const status =
+    document.getElementById("submitStatus");
+  
+  
+  
+    try{
+  
+  
+      status.textContent =
+      "Uploading evaluation...";
+  
+  
+      status.style.color="#667085";
+  
+  
+  
+      const formData = new FormData(form);
+  
+  
+  
+      formData.append(
+        "notification_email",
+        NOTIFICATION_EMAIL
+      );
+  
+  
+      formData.append(
+        "survey_name",
+        "AMRECO PURESIL Sustainable Fabric Evaluation"
+      );
+  
+  
+      formData.append(
+        "user_agent",
+        navigator.userAgent
+      );
+  
+  
+      formData.append(
+        "page_url",
+        window.location.href
+      );
+  
+  
+      formData.append(
+        "submitted_at",
+        new Date().toISOString()
+      );
+  
+  
+  
+  
+      const response = await fetch(
+        SUBMIT_ENDPOINT,
+        {
+  
+          method:"POST",
+  
+          body:formData
+  
+        }
+      );
+  
+  
+  
+  
+      if(!response.ok){
+  
+        throw new Error(
+          "Server Error: "+response.status
+        );
+  
+      }
+  
+  
+  
+  
+      const result = await response.json();
+  
+  
+  
+      if(result.success){
+  
+  
+        status.textContent =
+        "Thank you. Your evaluation has been submitted successfully.";
+  
+  
+        status.style.color="#2F6B2F";
+  
+  
+  
+        localStorage.removeItem(
+          "amray_amreco_survey_draft"
+        );
+  
+  
+  
+        alert(
+          "Evaluation submitted successfully. Thank you for your feedback."
+        );
+  
+  
+      }
+  
+      else{
+  
+  
+        throw new Error(
+          result.message || "Submission failed."
+        );
+  
+  
+      }
+  
+  
+  
+    }
+  
+  
+    catch(err){
+  
+  
+      console.error(err);
+  
+  
+  
+      status.textContent =
+      "Online submission failed. Please download the CSV or JSON backup and email it to "
+      + NOTIFICATION_EMAIL;
+  
+  
+  
+      status.style.color="#B42318";
+  
+  
+  
+      alert(
+        "Online submission failed.\n\n"+
+        err.message+
+        "\n\nPlease use the CSV/JSON backup."
+      );
+  
+  
+  
+    }
+  
+  
+  
+  }
+  
+  
+  
+  updateProgress();
+  
+  </script>
 
 
 </body></html>
