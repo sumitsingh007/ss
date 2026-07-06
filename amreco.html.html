@@ -218,81 +218,6 @@
       <button class="btn secondary" onclick="saveDraft()">Save draft</button>
       <p class="small">Responses save locally in this browser until exported or cleared.</p>
     </aside>
-
-    <!--
-MySQL database and table for the given survey form with ALL columns represented:
-
--- Create database
-CREATE DATABASE amreco_survey;
-
--- Use the database
-USE amreco_survey;
-
--- Create table for survey responses
-CREATE TABLE survey_responses (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    evaluator VARCHAR(255) NOT NULL,
-    role VARCHAR(100) NOT NULL,
-    duration VARCHAR(50) NOT NULL,
-    
-    -- Section 2: First impression
-    premium_appearance TINYINT,
-    premium_touch_first TINYINT,
-    first_compare VARCHAR(20),
-    first_concern TEXT NOT NULL,
-    
-    -- Section 3: Touch, feel & luxury
-    luxury_feel TINYINT,
-    high_end_suitability TINYINT,
-    descriptors VARCHAR(255), -- comma-separated
-    less_premium_reason TEXT,
-    
-    -- Section 4: Comfort & user experience
-    comfort TINYINT,
-    movement TINYINT,
-    heat TINYINT,
-    comfort_issue TEXT,
-    
-    -- Section 5: Creasing & appearance retention
-    crease_resistance TINYINT,
-    crease_after_use VARCHAR(20),
-    
-    -- Section 6: Wipe-clean
-    wipe_clean_ease TINYINT,
-    soil_marks_present VARCHAR(5),
-    clean_result VARCHAR(50),
-    cleaning_comment TEXT,
-    
-    -- Section 7: Durability
-    abrasion_evidence VARCHAR(5),
-    staining_evidence VARCHAR(5),
-    durability_comment TEXT,
-    
-    -- Section 8: Competitor test
-    compared_with_competitor VARCHAR(5),
-    competitor_fabric_compare VARCHAR(20),
-    competitor_comment TEXT,
-    
-    -- Section 9: Mandatory defect report
-    defects_observed VARCHAR(5),
-    defect_type VARCHAR(255),
-    defect_severity TINYINT,
-    defect_cause TEXT,
-    defect_image_url VARCHAR(255),
-    
-    -- Section 10: Export & submit
-    general_comments TEXT,
-    willing_to_use VARCHAR(5),
-    would_recommend VARCHAR(5),
-    
-    -- System columns
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Note: some columns (wipe_clean_ease, soil_marks_present, etc.) are for example; 
--- map real field names after seeing full survey HTML for those sections.
--- Use varchar for radio/checkbox, tinyint for numeric/range, text for comments, and varchar(255) for URLs/lists.
--->
     <form id="survey" class="content">
       <section class="section active">
         <div class="section-head"><div class="num">01</div><div><h2>Trial details</h2><p class="desc">Identify the evaluation context without making the survey difficult to complete.</p></div></div>
@@ -475,22 +400,48 @@ document.querySelectorAll('input[type=range]').forEach(r=>{
   }
   r.addEventListener('input', upd); upd();
 });
-function collectData(){
-  const data = {};
-  const fd = new FormData(form);
-  for (const [k,v] of fd.entries()) {
-    if(v instanceof File) {
-      if(!data[k]) data[k]=[];
-      if(v.name) data[k].push(v.name);
-    } else if(data[k]) {
-      if(!Array.isArray(data[k])) data[k] = [data[k]];
-      data[k].push(v);
+function collectData() {
+
+const data = {};
+
+const fd = new FormData(form);
+
+for (const [key, value] of fd.entries()) {
+
+    if (value instanceof File) {
+
+        if (value.name) {
+
+            if (!data[key]) data[key] = [];
+
+            data[key].push(value.name);
+
+        }
+
     } else {
-      data[k]=v;
+
+        if (data[key] !== undefined) {
+
+            if (!Array.isArray(data[key])) {
+                data[key] = [data[key]];
+            }
+
+            data[key].push(value);
+
+        } else {
+
+            data[key] = value;
+
+        }
+
     }
-  }
-  data.exported_at = new Date().toISOString();
-  return data;
+
+}
+
+data.exported_at = new Date().toISOString();
+
+return data;
+
 }
 function saveDraft(){
   localStorage.setItem('amray_amreco_survey_draft', JSON.stringify(collectData()));
@@ -520,33 +471,77 @@ function downloadCSV(){
   const esc = v => '"' + String(Array.isArray(v)?v.join('; '):v).replaceAll('"','""') + '"';
   download('amray_amreco_survey_response.csv', keys.map(esc).join(',')+'\n'+keys.map(k=>esc(data[k])).join(','), 'text/csv');
 }
-async function submitToAmRay(){
-  if(!validateAllSections()) return;
-  const status = document.getElementById('submitStatus');
-  const payload = collectData();
-  payload.notification_email = NOTIFICATION_EMAIL;
-  payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
-  payload.user_agent = navigator.userAgent;
-  payload.page_url = window.location.href;
-  try {
+async function submitToAmRay() {
+
+if (!validateAllSections()) return;
+
+const status = document.getElementById("submitStatus");
+
+const payload = collectData();
+
+payload.notification_email = NOTIFICATION_EMAIL;
+payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
+payload.user_agent = navigator.userAgent;
+payload.page_url = window.location.href;
+payload.submitted_at = new Date().toISOString();
+
+try {
+
     status.textContent = "Submitting evaluation...";
     status.style.color = "#667085";
+
     const response = await fetch(SUBMIT_ENDPOINT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify(payload)
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
     });
-    status.textContent = "Thank you. Your evaluation has been submitted to AmRay.";
-    status.style.color = "#2F6B2F";
-    localStorage.removeItem('amray_amreco_survey_draft');
-    alert("Evaluation submitted successfully. Thank you for your feedback.");
-  } catch(err) {
+
+    if (!response.ok) {
+        throw new Error("Server Error: " + response.status);
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+
+        status.textContent = "Thank you. Your evaluation has been submitted successfully.";
+        status.style.color = "#2F6B2F";
+
+        localStorage.removeItem("amray_amreco_survey_draft");
+
+        alert("Evaluation submitted successfully. Thank you for your feedback.");
+
+        // Optional
+        // form.reset();
+        // showSection(0);
+
+    } else {
+
+        throw new Error(result.message || "Submission failed.");
+
+    }
+
+}
+catch (err) {
+
     console.error(err);
-    status.textContent = "Online submission failed. Please download the CSV or JSON backup and email it to " + NOTIFICATION_EMAIL;
+
+    status.textContent =
+        "Online submission failed. Please download the CSV or JSON backup and email it to " +
+        NOTIFICATION_EMAIL;
+
     status.style.color = "#B42318";
-    alert("Online submission failed. Please use the CSV/JSON backup buttons and email the file to " + NOTIFICATION_EMAIL);
-  }
+
+    alert(
+        "Online submission failed.\n\n" +
+        err.message +
+        "\n\nPlease use the CSV/JSON backup."
+    );
+
+}
+
 }
 updateProgress();
 </script>
