@@ -349,298 +349,225 @@
   const sections = [...document.querySelectorAll(".section")];
   const navs = [...document.querySelectorAll(".navbtn")];
   const form = document.getElementById("survey");
-  
-  const SUBMIT_ENDPOINT ="https://script.google.com/macros/s/AKfycbyNyb6jUSdrHTzJUF9y7B6bUJ1wCn2MXjpArl9tDdxkULWC45IQFJdGemKyF3iQfRIAVg/exec";
-  
+
+  const SUBMIT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyNyb6jUSdrHTzJUF9y7B6bUJ1wCn2MXjpArl9tDdxkULWC45IQFJdGemKyF3iQfRIAVg/exec";
   const NOTIFICATION_EMAIL = "amraydigital@gmail.com";
-  
-  
-  function showSection(i){
-      if(i<0 || i>=sections.length) return;
-  
-      current=i;
-  
-      sections.forEach((s,index)=>s.classList.toggle("active",index===i));
-      navs.forEach((n,index)=>n.classList.toggle("active",index===i));
-  
-      updateProgress();
-  
-      window.scrollTo({
-          top:0,
-          behavior:"smooth"
-      });
+
+  function showSection(i) {
+    if (i < 0 || i >= sections.length) return;
+
+    current = i;
+
+    sections.forEach((s, index) => s.classList.toggle("active", index === i));
+    navs.forEach((n, index) => n.classList.toggle("active", index === i));
+    updateProgress();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
-  
-  
-  function validateCurrent(){
-  
-      const sec=sections[current];
-      let ok=true;
-  
-      sec.querySelectorAll("[required]").forEach(el=>{
-          if(!el.checkValidity()) ok=false;
-      });
-  
-      sec.classList.toggle("invalid",!ok);
-  
-      if(!ok){
-          const first=sec.querySelector(":invalid");
-          if(first) first.focus();
+
+  function validateCurrent() {
+    const sec = sections[current];
+    let ok = true;
+    sec.querySelectorAll("[required]").forEach(el => {
+      if (!el.checkValidity()) ok = false;
+    });
+
+    sec.classList.toggle("invalid", !ok);
+
+    if (!ok) {
+      const first = sec.querySelector(":invalid");
+      if (first) first.focus();
+    }
+    return ok;
+  }
+
+  function validateAllSections() {
+    for (let i = 0; i < sections.length; i++) {
+      current = i;
+      if (!validateCurrent()) {
+        showSection(i);
+        return false;
       }
-  
-      return ok;
+    }
+    return true;
   }
-  
-  
-  function validateAllSections(){
-  
-      for(let i=0;i<sections.length;i++){
-  
-          current=i;
-  
-          if(!validateCurrent()){
-              showSection(i);
-              return false;
-          }
+
+  function nextSection() {
+    if (validateCurrent()) showSection(current + 1);
+  }
+
+  function prevSection() {
+    showSection(current - 1);
+  }
+
+  navs.forEach((n, i) => {
+    n.addEventListener("click", () => {
+      if (i <= current || validateCurrent()) {
+        showSection(i);
       }
-  
-      return true;
-  }
-  
-  
-  function nextSection(){
-      if(validateCurrent()) showSection(current+1);
-  }
-  
-  function prevSection(){
-      showSection(current-1);
-  }
-  
-  
-  navs.forEach((n,i)=>{
-      n.addEventListener("click",()=>{
-          if(i<=current || validateCurrent()){
-              showSection(i);
-          }
-      });
+    });
   });
-  
-  
-  function updateProgress(){
-      document.getElementById("progress").style.width=
-          ((current+1)/sections.length*100)+"%";
+
+  function updateProgress() {
+    document.getElementById("progress").style.width =
+      ((current + 1) / sections.length * 100) + "%";
   }
-  
-  
+
   // Range UI
-  
-  document.querySelectorAll("input[type=range]").forEach(r=>{
-  
-      const score=r.closest(".q").querySelector(".score");
-  
-      function update(){
-          if(score) score.textContent=r.value;
-      }
-  
-      r.addEventListener("input",update);
-      update();
-  
+  document.querySelectorAll("input[type=range]").forEach(r => {
+    const score = r.closest(".q").querySelector(".score");
+    function update() {
+      if (score) score.textContent = r.value;
+    }
+    r.addEventListener("input", update);
+    update();
   });
-  
-  
-  // Convert file
-  
-  function fileToBase64(file){
-  
-      return new Promise((resolve,reject)=>{
-  
-          const reader=new FileReader();
-  
-          reader.onload=()=>{
-              resolve(reader.result.split(",")[1]);
-          };
-  
-          reader.onerror=reject;
-  
-          reader.readAsDataURL(file);
-  
-      });
-  
+
+  // Convert file(s) to base64. Handles single and multiple files.
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // can be image or any file
+        resolve(reader.result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
-  
-  
-  // Collect data
-  
-  async function collectData(){
-  
-      const data={};
-  
-      const fd=new FormData(form);
-  
-      for(const [key,value] of fd.entries()){
-  
-          if(value instanceof File && value.name){
-  
-              if(!data[key]) data[key]=[];
-  
-              data[key].push({
-                  name:value.name,
-                  type:value.type,
-                  data:await fileToBase64(value)
-              });
-  
+
+  // Helper to collect data from form, including multiple files per field
+  async function collectData() {
+    const data = {};
+    const fd = new FormData(form);
+
+    // Helper for file inputs
+    const fileInputs = form.querySelectorAll('input[type="file"]');
+    for (const input of fileInputs) {
+      if (!input.name) continue;
+      let filesArr = Array.from(input.files);
+      if (filesArr.length > 0) {
+        data[input.name] = [];
+        for (const file of filesArr) {
+          if (file && file.name) {
+            const base64 = await fileToBase64(file);
+            data[input.name].push({
+              name: file.name,
+              type: file.type,
+              data: base64
+            });
           }
-          else{
-  
-              if(data[key]!==undefined){
-  
-                  if(!Array.isArray(data[key]))
-                      data[key]=[data[key]];
-  
-                  data[key].push(value);
-  
-              }else{
-  
-                  data[key]=value;
-  
-              }
-  
-          }
-  
+        }
+        // If no file selected, data[input.name] remains an empty array
       }
-  
-      data.exported_at=new Date().toISOString();
-  
-      return data;
-  
+    }
+
+    // Now process all other form fields that aren't files, preserving arrays
+    for (const [key, value] of fd.entries()) {
+      // Files were already handled
+      if (form.querySelector(`input[type="file"][name="${key}"]`)) continue;
+
+      if (data[key] !== undefined) { // duplicate name (e.g. checkboxes)
+        if (!Array.isArray(data[key])) data[key] = [data[key]];
+        data[key].push(value);
+      } else {
+        data[key] = value;
+      }
+    }
+
+    data.exported_at = new Date().toISOString();
+    return data;
   }
-  
-  
-  
+
   // Download helpers
-  
-  function download(filename,text,type){
-  
-      const a=document.createElement("a");
-  
-      a.href=URL.createObjectURL(new Blob([text],{type}));
-  
-      a.download=filename;
-  
-      a.click();
-  
-      URL.revokeObjectURL(a.href);
-  
+  function download(filename, text, type) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 500);
   }
-  
-  
-  async function downloadJSON(){
-  
-      if(!validateCurrent()) return;
-  
-      const data=await collectData();
-  
-      download(
-          "survey.json",
-          JSON.stringify(data,null,2),
-          "application/json"
-      );
-  
+
+  async function downloadJSON() {
+    if (!validateCurrent()) return;
+    const data = await collectData();
+    download(
+      "survey.json",
+      JSON.stringify(data, null, 2),
+      "application/json"
+    );
   }
-  
-  
-  async function downloadCSV(){
-  
-      if(!validateCurrent()) return;
-  
-      const data=await collectData();
-  
-      const keys=Object.keys(data);
-  
-      const esc=v=>'"'+String(
-          Array.isArray(v)?JSON.stringify(v):v
-      ).replaceAll('"','""')+'"';
-  
-      download(
-          "survey.csv",
-          keys.map(esc).join(",")+"\n"+
-          keys.map(k=>esc(data[k])).join(","),
-          "text/csv"
-      );
-  
+
+  async function downloadCSV() {
+    if (!validateCurrent()) return;
+    const data = await collectData();
+
+    // For CSV, files will become JSON-ified in their field
+    const keys = Object.keys(data);
+    const esc = v => '"' + String(
+      Array.isArray(v) ? JSON.stringify(v) : v
+    ).replaceAll('"', '""') + '"';
+
+    download(
+      "survey.csv",
+      keys.map(esc).join(",") + "\n" +
+      keys.map(k => esc(data[k])).join(","),
+      "text/csv"
+    );
   }
-  
-  
-  
-  // Submit
-  
-  async function submitToAmRay(){
-  
-      if(!validateAllSections()) return;
-  
-      const status=document.getElementById("submitStatus");
-  
-      try{
-  
-          status.style.color="#666";
-          status.textContent="Submitting...";
-  
-          const payload=await collectData();
-  
-          payload.notification_email=NOTIFICATION_EMAIL;
-          payload.survey_name="AMRECO PURESIL Sustainable Fabric Evaluation";
-          payload.page_url=location.href;
-          payload.user_agent=navigator.userAgent;
-          payload.submitted_at=new Date().toISOString();
-  
-          const response=await fetch(SUBMIT_ENDPOINT,{
-              method:"POST",
-              headers:{
-                  "Content-Type":"application/json"
-              },
-              body:JSON.stringify(payload)
-          });
-  
-          const text=await response.text();
-  
-          let result;
-  
-          try{
-              result=JSON.parse(text);
-          }
-          catch{
-              throw new Error(text);
-          }
-  
-          if(!result.success){
-              throw new Error(result.message || "Submission failed");
-          }
-  
-          status.style.color="green";
-          status.textContent="Submitted successfully!";
-  
-          localStorage.removeItem("amray_amreco_survey_draft");
-  
-          alert("Survey submitted successfully.");
-  
+
+  // Submit with files/images handled in payload as base64 encoded objects
+  async function submitToAmRay() {
+    if (!validateAllSections()) return;
+    const status = document.getElementById("submitStatus");
+
+    try {
+      status.style.color = "#666";
+      status.textContent = "Submitting...";
+
+      const payload = await collectData();
+
+      payload.notification_email = NOTIFICATION_EMAIL;
+      payload.survey_name = "AMRECO PURESIL Sustainable Fabric Evaluation";
+      payload.page_url = location.href;
+      payload.user_agent = navigator.userAgent;
+      payload.submitted_at = new Date().toISOString();
+
+      const response = await fetch(SUBMIT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await response.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        throw new Error(text);
       }
-      catch(err){
-  
-          console.error(err);
-  
-          status.style.color="red";
-          status.textContent="Submission failed.";
-  
-          alert(err.message);
-  
+
+      if (!result.success) {
+        throw new Error(result.message || "Submission failed");
       }
-  
+
+      status.style.color = "green";
+      status.textContent = "Submitted successfully!";
+      localStorage.removeItem("amray_amreco_survey_draft");
+      alert("Survey submitted successfully.");
+    } catch (err) {
+      console.error(err);
+      status.style.color = "red";
+      status.textContent = "Submission failed.";
+      alert(err.message);
+    }
   }
-  
-  
+
   updateProgress();
-  
-  </script>
+</script>
 
 
 </body></html>
