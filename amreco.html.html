@@ -296,10 +296,10 @@ CREATE TABLE survey_responses (
     <form id="survey" class="content">
       <section class="section active">
         <div class="section-head"><div class="num">01</div><div><h2>Trial details</h2><p class="desc">Identify the evaluation context without making the survey difficult to complete.</p></div></div>
-        <div class="q"><label class="title">Evaluator name or ID <span class="req">*</span></label><input required="#" name="evaluator" type="text" placeholder="Name, initials, or trial ID"></div>
-        <div class="q"><label class="title">Clinical role <span class="req">*</span></label><select required="#" name="role"><option value="">Select role</option><option>Radiographer</option><option>Interventional cardiologist</option><option>Cath lab nurse</option><option>Vascular surgeon</option><option>Physicist</option><option>Procurement / product evaluation</option><option>Other</option></select></div>
+        <div class="q"><label class="title">Evaluator name or ID <span class="req">*</span></label><input  name="evaluator" type="text" placeholder="Name, initials, or trial ID"></div>
+        <div class="q"><label class="title">Clinical role <span class="req">*</span></label><select  name="role"><option value="">Select role</option><option>Radiographer</option><option>Interventional cardiologist</option><option>Cath lab nurse</option><option>Vascular surgeon</option><option>Physicist</option><option>Procurement / product evaluation</option><option>Other</option></select></div>
         <div class="q"><label class="title">Trial duration so far <span class="req">*</span></label><div class="grid2">
-          <label class="choice"><input required="#" type="radio" name="duration" value="Less than 1 week"> Less than 1 week</label>
+          <label class="choice"><input  type="radio" name="duration" value="Less than 1 week"> Less than 1 week</label>
           <label class="choice"><input type="radio" name="duration" value="1-2 weeks"> 1-2 weeks</label>
           <label class="choice"><input type="radio" name="duration" value="2-4 weeks"> 2-4 weeks</label>
           <label class="choice"><input type="radio" name="duration" value="More than 1 month"> More than 1 month</label>
@@ -314,7 +314,7 @@ CREATE TABLE survey_responses (
         <div class="q"><label class="title">Compared with your current garment, first impression is:</label><div class="grid2">
           <label class="choice"><input type="radio" name="first_compare" value="Much worse"> Much worse</label><label class="choice"><input type="radio" name="first_compare" value="Worse"> Worse</label><label class="choice"><input type="radio" name="first_compare" value="Similar"> Similar</label><label class="choice"><input type="radio" name="first_compare" value="Better"> Better</label><label class="choice"><input type="radio" name="first_compare" value="Much better"> Much better</label>
         </div></div>
-        <div class="q"><label class="title">What was your first concern about this fabric? <span class="req">*</span></label><textarea required="#" name="first_concern" placeholder="Please identify a concern, weakness, or possible issue."></textarea><div class="validation">This question is required because the trial is focused on finding faults.</div></div>
+        <div class="q"><label class="title">What was your first concern about this fabric? <span class="req">*</span></label><textarea  name="first_concern" placeholder="Please identify a concern, weakness, or possible issue."></textarea><div class="validation">This question is required because the trial is focused on finding faults.</div></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -325,7 +325,7 @@ CREATE TABLE survey_responses (
         <div class="q"><label class="title">Which words describe the fabric? Select all that apply.</label><div class="grid3">
           <label class="choice"><input type="checkbox" name="descriptors" value="Soft"> Soft</label><label class="choice"><input type="checkbox" name="descriptors" value="Stiff"> Stiff</label><label class="choice"><input type="checkbox" name="descriptors" value="Rough"> Rough</label><label class="choice"><input type="checkbox" name="descriptors" value="Plastic-like"> Plastic-like</label><label class="choice"><input type="checkbox" name="descriptors" value="Cheap"> Cheap</label><label class="choice"><input type="checkbox" name="descriptors" value="Premium"> Premium</label><label class="choice"><input type="checkbox" name="descriptors" value="Clinical"> Clinical</label><label class="choice"><input type="checkbox" name="descriptors" value="Durable"> Durable</label><label class="choice"><input type="checkbox" name="descriptors" value="Too synthetic"> Too synthetic</label>
         </div></div>
-        <div class="q"><label class="title">What makes the fabric feel less premium than it could be? <span class="req">*</span></label><textarea required="#" name="less_premium_reason"></textarea></div>
+        <div class="q"><label class="title">What makes the fabric feel less premium than it could be? <span class="req">*</span></label><textarea  name="less_premium_reason"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -345,7 +345,7 @@ CREATE TABLE survey_responses (
           <label class="choice"><input type="radio" name="crease_after_use" value="Untidy"> Untidy</label><label class="choice"><input type="radio" name="crease_after_use" value="Acceptable"> Acceptable</label><label class="choice"><input type="radio" name="crease_after_use" value="Professional"> Professional</label><label class="choice"><input type="radio" name="crease_after_use" value="Premium"> Premium</label>
         </div></div>
         <div class="q"><label class="title">Upload photos of creasing or appearance issues</label><div class="filebox"><input type="file" name="crease_photos" accept="image/*" multiple=""><p>Photo files remain with the evaluator unless separately submitted through SharePoint, Forms or email.</p></div></div>
-        <div class="q"><label class="title">What concerns do you have regarding creasing over product lifetime? <span class="req">*</span></label><textarea required="#" name="creasing_concerns"></textarea></div>
+        <div class="q"><label class="title">What concerns do you have regarding creasing over product lifetime? <span class="req">*</span></label><textarea  name="creasing_concerns"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -358,7 +358,7 @@ CREATE TABLE survey_responses (
         <div class="q conditional" id="cleaning_follow"><label class="title">Cleaning scored below target. Describe the issue.</label><textarea name="cleaning_issue"></textarea></div>
         <div class="q sliderq"><label class="title">Confidence in long-term stain resistance <span class="score">5</span></label><div class="slider-row"><span>No confidence</span><input name="stain_confidence" type="range" min="0" max="10" value="5"><span>Complete confidence</span></div></div>
         <div class="q"><label class="title">Upload evidence of staining, residue or cleaning failure</label><div class="filebox"><input type="file" name="stain_photos" accept="image/*" multiple=""></div></div>
-        <div class="q"><label class="title">What concerns do you have about long-term stain resistance? <span class="req">*</span></label><textarea required="#" name="stain_concerns"></textarea></div>
+        <div class="q"><label class="title">What concerns do you have about long-term stain resistance? <span class="req">*</span></label><textarea  name="stain_concerns"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -369,7 +369,7 @@ CREATE TABLE survey_responses (
           <label class="choice"><input type="checkbox" name="observed_issues" value="Scratches"> Scratches</label><label class="choice"><input type="checkbox" name="observed_issues" value="Scuffs"> Scuffs</label><label class="choice"><input type="checkbox" name="observed_issues" value="Abrasion"> Abrasion</label><label class="choice"><input type="checkbox" name="observed_issues" value="Fraying"> Fraying</label><label class="choice"><input type="checkbox" name="observed_issues" value="Surface damage"> Surface damage</label><label class="choice"><input type="checkbox" name="observed_issues" value="Colour change"> Colour change</label><label class="choice"><input type="checkbox" name="observed_issues" value="Stitching issue"> Stitching issue</label><label class="choice"><input type="checkbox" name="observed_issues" value="None"> None</label>
         </div></div>
         <div class="q"><label class="title">Upload evidence of wear or damage</label><div class="filebox"><input type="file" name="damage_photos" accept="image/*" multiple=""></div></div>
-        <div class="q"><label class="title">What durability concern worries you most? <span class="req">*</span></label><textarea required="#" name="durability_concern"></textarea></div>
+        <div class="q"><label class="title">What durability concern worries you most? <span class="req">*</span></label><textarea  name="durability_concern"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -381,18 +381,18 @@ CREATE TABLE survey_responses (
             <tr><td>Appearance</td><td><input type="radio" name="matrix_appearance" value="Much worse"></td><td><input type="radio" name="matrix_appearance" value="Worse"></td><td><input type="radio" name="matrix_appearance" value="Similar"></td><td><input type="radio" name="matrix_appearance" value="Better"></td><td><input type="radio" name="matrix_appearance" value="Much better"></td></tr><tr><td>Feel</td><td><input type="radio" name="matrix_feel" value="Much worse"></td><td><input type="radio" name="matrix_feel" value="Worse"></td><td><input type="radio" name="matrix_feel" value="Similar"></td><td><input type="radio" name="matrix_feel" value="Better"></td><td><input type="radio" name="matrix_feel" value="Much better"></td></tr><tr><td>Comfort</td><td><input type="radio" name="matrix_comfort" value="Much worse"></td><td><input type="radio" name="matrix_comfort" value="Worse"></td><td><input type="radio" name="matrix_comfort" value="Similar"></td><td><input type="radio" name="matrix_comfort" value="Better"></td><td><input type="radio" name="matrix_comfort" value="Much better"></td></tr><tr><td>Durability</td><td><input type="radio" name="matrix_durability" value="Much worse"></td><td><input type="radio" name="matrix_durability" value="Worse"></td><td><input type="radio" name="matrix_durability" value="Similar"></td><td><input type="radio" name="matrix_durability" value="Better"></td><td><input type="radio" name="matrix_durability" value="Much better"></td></tr><tr><td>Cleaning</td><td><input type="radio" name="matrix_cleaning" value="Much worse"></td><td><input type="radio" name="matrix_cleaning" value="Worse"></td><td><input type="radio" name="matrix_cleaning" value="Similar"></td><td><input type="radio" name="matrix_cleaning" value="Better"></td><td><input type="radio" name="matrix_cleaning" value="Much better"></td></tr><tr><td>Stain resistance</td><td><input type="radio" name="matrix_stain_resistance" value="Much worse"></td><td><input type="radio" name="matrix_stain_resistance" value="Worse"></td><td><input type="radio" name="matrix_stain_resistance" value="Similar"></td><td><input type="radio" name="matrix_stain_resistance" value="Better"></td><td><input type="radio" name="matrix_stain_resistance" value="Much better"></td></tr><tr><td>Sustainability</td><td><input type="radio" name="matrix_sustainability" value="Much worse"></td><td><input type="radio" name="matrix_sustainability" value="Worse"></td><td><input type="radio" name="matrix_sustainability" value="Similar"></td><td><input type="radio" name="matrix_sustainability" value="Better"></td><td><input type="radio" name="matrix_sustainability" value="Much better"></td></tr>
           </tbody></table>
         </div>
-        <div class="q"><label class="title">Which category performs worse than your current garment? <span class="req">*</span></label><select required="#" name="worse_category"><option value="">Select category</option><option>Appearance</option><option>Feel</option><option>Comfort</option><option>Durability</option><option>Cleaning</option><option>Stain resistance</option><option>Sustainability</option><option>None</option></select></div>
-        <div class="q"><label class="title">Explain why <span class="req">*</span></label><textarea required="#" name="worse_explanation"></textarea></div>
+        <div class="q"><label class="title">Which category performs worse than your current garment? <span class="req">*</span></label><select  name="worse_category"><option value="">Select category</option><option>Appearance</option><option>Feel</option><option>Comfort</option><option>Durability</option><option>Cleaning</option><option>Stain resistance</option><option>Sustainability</option><option>None</option></select></div>
+        <div class="q"><label class="title">Explain why <span class="req">*</span></label><textarea  name="worse_explanation"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
       <section class="section">
         <div class="section-head"><div class="num">09</div><div><h2>Mandatory defect report</h2><p class="desc">This page is deliberately mandatory. The survey cannot be completed without identifying concerns.</p></div></div>
         <div class="dangerbox"><h3>Do not leave this section positive.</h3><p>We do not want your “how good this product is” feedback here. We want your “what is wrong with this product” feedback.</p></div>
-        <div class="q"><label class="title">What is the biggest flaw in this fabric? <span class="req">*</span></label><textarea required="#" name="biggest_flaw"></textarea></div>
-        <div class="q"><label class="title">What would stop you purchasing this garment? <span class="req">*</span></label><textarea required="#" name="purchase_barrier"></textarea></div>
-        <div class="q"><label class="title">If you were a competitor trying to win this business away from AmRay, what weakness would you highlight? <span class="req">*</span></label><textarea required="#" name="competitor_weakness"></textarea></div>
-        <div class="q"><label class="title">What is the single most important improvement AmRay should make before launch? <span class="req">*</span></label><textarea required="#" name="one_improvement"></textarea></div>
+        <div class="q"><label class="title">What is the biggest flaw in this fabric? <span class="req">*</span></label><textarea  name="biggest_flaw"></textarea></div>
+        <div class="q"><label class="title">What would stop you purchasing this garment? <span class="req">*</span></label><textarea  name="purchase_barrier"></textarea></div>
+        <div class="q"><label class="title">If you were a competitor trying to win this business away from AmRay, what weakness would you highlight? <span class="req">*</span></label><textarea  name="competitor_weakness"></textarea></div>
+        <div class="q"><label class="title">What is the single most important improvement AmRay should make before launch? <span class="req">*</span></label><textarea  name="one_improvement"></textarea></div>
         <div class="actions"><button type="button" class="btn ghost" onclick="prevSection()">Back</button><button type="button" class="btn" onclick="nextSection()">Next</button></div>
       </section>
 
@@ -400,7 +400,7 @@ CREATE TABLE survey_responses (
         <div class="section-head"><div class="num">10</div><div><h2>Launch decision &amp; export</h2><p class="desc">Final decision and downloadable response data.</p></div></div>
         <div class="q sliderq"><label class="title">Should this product proceed to wider clinical release? <span class="score">5</span></label><div class="slider-row"><span>Definitely not</span><input name="launch_readiness" type="range" min="0" max="10" value="5"><span>Definitely yes</span></div></div>
         <div class="q sliderq"><label class="title">Net Rejection Score: how likely are you to recommend AGAINST this product in its current form? <span class="score">5</span></label><div class="slider-row"><span>Not likely</span><input name="net_rejection_score" type="range" min="0" max="10" value="5"><span>Extremely likely</span></div></div>
-        <div class="q"><label class="title">Tell us one thing that disappointed you during this evaluation. <span class="req">*</span></label><textarea required="#" name="final_disappointment"></textarea></div>
+        <div class="q"><label class="title">Tell us one thing that disappointed you during this evaluation. <span class="req">*</span></label><textarea  name="final_disappointment"></textarea></div>
         <div class="callout"><b>Automatic submission enabled:</b> This version is designed to submit survey data to a Microsoft Power Automate HTTP trigger. Once connected, Power Automate can email <b>amraydigital@gmail.com</b> and store the response in SharePoint or Excel automatically.</div>
         <div class="dangerbox" id="setupWarning"><h3>Setup required before sending externally</h3><p>This file contains a placeholder endpoint. Replace <b>PASTE_POWER_AUTOMATE_HTTP_POST_URL_HERE</b> in the HTML with your Power Automate HTTP POST URL before publishing.</p></div>
         <div class="export-panel">
